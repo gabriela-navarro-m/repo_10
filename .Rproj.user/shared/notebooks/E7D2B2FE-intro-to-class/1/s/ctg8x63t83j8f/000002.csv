@@ -1,0 +1,3 @@
+"0","# Veamos la distribución de los residuos de la regresión"
+"0","ols  = lm(lifeExp ~ gdpPercap , data=gapminder , subset = gdpPercap <50000)"
+"0","ols$residuals %>% hist()"

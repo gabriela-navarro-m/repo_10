@@ -1,0 +1,4 @@
+"0","# Veamos los valores predichos"
+"0","data = gapminder"
+"0","data$lifeExp_gorro = predict(object = ols,newdata=data)"
+"0","data"

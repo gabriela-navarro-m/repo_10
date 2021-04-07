@@ -1,0 +1,4 @@
+"0","# Veamos los valores predichos"
+"0","ggplot(data = data) + "
+"0","geom_point(aes(x=gdpPercap,y=lifeExp),col=""red"") +"
+"0","geom_point(aes(x=gdpPercap,y=lifeExp_gorro),col=""blue"")"

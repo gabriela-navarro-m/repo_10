@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Taller de R: Estadística y programación</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Eduard Martínez" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Taller de R: Estadística y programación
+## Lectura 10: Regresiones en R
+### Eduard Martínez
+### Universidad de los Andes | <a href="https://github.com/taller-R">ECON-1302</a>
+
+---
+
+
+
+
+# Ya vimos
+
+1. Crear funciones en R - [[Ver repositorio aquí]](https://github.com/taller-R/clase_7)
+
+--
+
+# Hoy veremos 
+
+1. [Regresiones básicas](#intro)
+
+    1.1. Sintaxis
+    
+    1.2. Funciones `lm()` y `glm()`
+    
+2. [Posestimaciones](#post)
+
+    2.1. Gráficos
+
+    2.2. Tablas
+
+3. [Datos panel y IV](#felm)
+
+   3.1. Función `felm()`
+
+&lt;!---------------------------&gt;
+&lt;!--- Regresiones básicas ---&gt;
+&lt;!---------------------------&gt;
+---
+class: inverse, center, middle
+name: intro
+# Regresiones básicas
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#FF007F' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Sintaxis
+
+&lt;div align="center"&gt;
+&lt;img src="pics/stata.png" height=400&gt;
+&lt;/div&gt;
+Tomado de: [R for Stata Users](http://r4stats.com/books/r4stata/)
+
+---
+# Funciones `lm()` y `glm()`
+
+
+```r
+# Estimaciones OLS
+lm(formula = y ~ x1 + x2 ... + xn , data = db)
+lm(formula = db$y ~ db$x1 + db$x2 ... + db$xn)
+
+# Estimaciones por GLM 
+glm(formula = y ~ x1 + x2 ... + xn , data = db , family  = binomial(link = "logit"))
+glm(formula = y ~ x1 + x2 ... + xn , data = db , family = poisson(link = "log"))
+```
+
+- Donde `y` es la variable dependiente o explicada y `x1`..`xn` son las variables independientes o explicativas. 
+
+- Tanto `lm()` como `glm()` tienen otros argumentos que pueden ser explorados usando la opción `?lm` y `?glm`.
+
+---
+# Veamos un ejemplo (...)
+
+```r
+# Cargar datos
+library(gapminder)
+gapminder
+```
+
+```
+## # A tibble: 1,704 x 6
+##    country     continent  year lifeExp      pop gdpPercap
+##    &lt;fct&gt;       &lt;fct&gt;     &lt;int&gt;   &lt;dbl&gt;    &lt;int&gt;     &lt;dbl&gt;
+##  1 Afghanistan Asia       1952    28.8  8425333      779.
+##  2 Afghanistan Asia       1957    30.3  9240934      821.
+##  3 Afghanistan Asia       1962    32.0 10267083      853.
+##  4 Afghanistan Asia       1967    34.0 11537966      836.
+##  5 Afghanistan Asia       1972    36.1 13079460      740.
+##  6 Afghanistan Asia       1977    38.4 14880372      786.
+##  7 Afghanistan Asia       1982    39.9 12881816      978.
+##  8 Afghanistan Asia       1987    40.8 13867957      852.
+##  9 Afghanistan Asia       1992    41.7 16317921      649.
+## 10 Afghanistan Asia       1997    41.8 22227415      635.
+## # … with 1,694 more rows
+```
+
+---
+# Veamos un ejemplo (...)
+
+Veamos la correlación entre expectiva de vida y PIB percapita 
+
+
+```r
+lm(lifeExp ~ gdpPercap , data = gapminder) %&gt;% summary() 
+```
+
+```
+## 
+## Call:
+## lm(formula = lifeExp ~ gdpPercap, data = gapminder)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -82.754  -7.758   2.176   8.225  18.426 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 5.396e+01  3.150e-01  171.29   &lt;2e-16 ***
+## gdpPercap   7.649e-04  2.579e-05   29.66   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 10.49 on 1702 degrees of freedom
+## Multiple R-squared:  0.3407,	Adjusted R-squared:  0.3403 
+## F-statistic: 879.6 on 1 and 1702 DF,  p-value: &lt; 2.2e-16
+```
+
+---
+# Veamos un ejemplo (...)
+
+Podemos crear un objeto que almacene la información de la regresión 
+
+
+```r
+ols = lm(lifeExp ~ gdpPercap , data=gapminder)
+class(ols) # Un objeto "lm" que almacena la información de la regresión
+```
+
+```
+## [1] "lm"
+```
+
+```r
+ols$call # modelo estimado
+```
+
+```
+## lm(formula = lifeExp ~ gdpPercap, data = gapminder)
+```
+
+```r
+ols$coefficients #  un vector con los coeficientes del modelo 
+```
+
+```
+##  (Intercept)    gdpPercap 
+## 5.395556e+01 7.648826e-04
+```
+
+```r
+ols$na.action # observaciones para las que hay NA 
+```
+
+```
+## NULL
+```
+
+```r
+summary(ols)$r.squared # R^2
+```
+
+```
+## [1] 0.340713
+```
+
+```r
+summary(ols)$adj.r.squared # R^2 ajustado
+```
+
+```
+## [1] 0.3403256
+```
+
+---
+# Veamos un ejemplo (...)
+
+Vamos a extraer los outlier...
+
+
+```r
+ggplot() + geom_point(data=gapminder%&gt;%subset(gdpPercap&lt;50000) , 
+                      aes(y=lifeExp, x=gdpPercap)) +
+geom_point(data=gapminder%&gt;%subset(gdpPercap&gt;50000) , 
+           aes(y=lifeExp, x=gdpPercap) , col="red")
+```
+
+&lt;img src="intro-to-class_files/figure-html/unnamed-chunk-5-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Veamos un ejemplo (...)
+
+
+```r
+# Vamos a extraer los datos con GDP mayor a 50000
+ols2 = lm(lifeExp ~ gdpPercap , data=gapminder , 
+          subset = gdpPercap &lt;50000)
+
+# Comparemos los R^2
+summary(ols)$adj.r.squared # R^2 ajustado
+```
+
+```
+## [1] 0.3403256
+```
+
+```r
+summary(ols2)$adj.r.squared # R^2 ajustado
+```
+
+```
+## [1] 0.4705194
+```
+
+---
+# Errores estandar robustos
+
+Corregir los errores estandar de la regresión...
+
+
+```r
+# erriores robustos
+ols_robust = lm_robust(lifeExp ~ gdpPercap , data=gapminder , subset = gdpPercap &lt;50000)
+
+# Comparemos los resultados
+summary(ols2)$coefficients # SE con lm()
+```
+
+```
+##                 Estimate   Std. Error   t value      Pr(&gt;|t|)
+## (Intercept) 52.093605573 2.969271e-01 175.44239  0.000000e+00
+## gdpPercap    0.001066994 2.746714e-05  38.84621 1.143374e-236
+```
+
+```r
+summary(ols_robust)$coefficients[,1:4] # SE con lm_robust() 
+```
+
+```
+##                 Estimate   Std. Error   t value      Pr(&gt;|t|)
+## (Intercept) 52.093605573 3.214800e-01 162.04306  0.000000e+00
+## gdpPercap    0.001066994 3.097469e-05  34.44729 1.359744e-197
+```
+
+&lt;!-----------------------&gt;
+&lt;!--- Posestimaciones ---&gt;
+&lt;!-----------------------&gt;
+---
+class: inverse, center, middle
+name: post
+# Posestimaciones
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#FF007F' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Residuales
+
+```r
+# Veamos la distribución de los residuos de la regresión
+ols  = lm(lifeExp ~ gdpPercap , data=gapminder , subset = gdpPercap &lt;50000)
+ols$residuals %&gt;% hist()
+```
+
+&lt;img src="intro-to-class_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Valores predichos (...)
+
+```r
+# Veamos los valores predichos
+data = gapminder %&gt;% subset(gdpPercap &lt;50000)
+data$lifeExp_gorro = predict(object = ols,newdata=data)
+data
+```
+
+```
+## # A tibble: 1,698 x 7
+##    country     continent  year lifeExp      pop gdpPercap lifeExp_gorro
+##    &lt;fct&gt;       &lt;fct&gt;     &lt;int&gt;   &lt;dbl&gt;    &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;
+##  1 Afghanistan Asia       1952    28.8  8425333      779.          52.9
+##  2 Afghanistan Asia       1957    30.3  9240934      821.          53.0
+##  3 Afghanistan Asia       1962    32.0 10267083      853.          53.0
+##  4 Afghanistan Asia       1967    34.0 11537966      836.          53.0
+##  5 Afghanistan Asia       1972    36.1 13079460      740.          52.9
+##  6 Afghanistan Asia       1977    38.4 14880372      786.          52.9
+##  7 Afghanistan Asia       1982    39.9 12881816      978.          53.1
+##  8 Afghanistan Asia       1987    40.8 13867957      852.          53.0
+##  9 Afghanistan Asia       1992    41.7 16317921      649.          52.8
+## 10 Afghanistan Asia       1997    41.8 22227415      635.          52.8
+## # … with 1,688 more rows
+```
+
+---
+# Valores predichos (...)
+
+
+```r
+# Veamos los valores predichos
+ggplot(data = data , aes(x=gdpPercap,y=lifeExp)) + 
+geom_point() + geom_smooth(method = lm)
+```
+
+```
+## `geom_smooth()` using formula 'y ~ x'
+```
+
+&lt;img src="intro-to-class_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Coef plot
+
+```r
+library(margins) ; library(broom) 
+ols2 = lm(lifeExp ~ -1 + gdpPercap , data=gapminder) 
+tidy(ols2, conf.int = TRUE) %&gt;% 
+ggplot(aes(x=term, y=estimate, ymin=conf.low, ymax=conf.high)) +
+geom_pointrange() + geom_hline(yintercept = 0, col = "orange") 
+```
+
+&lt;img src="intro-to-class_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# outreg
+
+```r
+library(outreg) 
+outreg(ols)
+```
+
+```
+##      .variable    .stat   Model 1
+## 1  (Intercept) Estimate 52.094***
+## 2               Std Err   [0.297]
+## 5    gdpPercap Estimate  0.001***
+## 6               Std Err   [0.000]
+## 9                     N      1698
+## 10                   R2     0.471
+## 11               adj R2     0.471
+## 12                  AIC 12436.606
+```
+
+
+&lt;!------------------------&gt;
+&lt;!--- Datos panel y IV ---&gt;
+&lt;!------------------------&gt;
+---
+class: inverse, center, middle
+name: felm
+# Datos panel y IV
+
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#FF007F' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+# Función `felm()`
+
+&lt;div align="center"&gt;
+&lt;img src="pics/felm.png" height=400&gt;
+&lt;/div&gt;
+Tomado de: [R for Stata Users](http://r4stats.com/books/r4stata/)
+
+
+---
+# Función `felm()`
+
+```r
+felm_model = felm(lifeExp ~ gdpPercap | country + year | 0 | country , data = gapminder)
+felm_model %&gt;% summary()
+```
+
+```
+## 
+## Call:
+##    felm(formula = lifeExp ~ gdpPercap | country + year | 0 | country,      data = gapminder) 
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -22.6373  -1.6934  -0.0494   2.0042  10.1101 
+## 
+## Coefficients:
+##             Estimate Cluster s.e. t value Pr(&gt;|t|)  
+## gdpPercap -7.802e-05    3.520e-05  -2.216   0.0283 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.438 on 1550 degrees of freedom
+## Multiple R-squared(full model): 0.9355   Adjusted R-squared: 0.9292 
+## Multiple R-squared(proj model): 0.01143   Adjusted R-squared: -0.08615 
+## F-statistic(full model, *iid*):  147 on 153 and 1550 DF, p-value: &lt; 2.2e-16 
+## F-statistic(proj model): 4.911 on 1 and 141 DF, p-value: 0.02829
+```
+
+&lt;!---------------------&gt;
+&lt;!---    Hoy vimos  ---&gt;
+&lt;!---------------------&gt;
+---
+class: inverse, center, middle
+
+# Hoy vimos...
+&lt;html&gt;&lt;div style='float:left'&gt;&lt;/div&gt;&lt;hr color='#FF007F' size=1px width=796px&gt;&lt;/html&gt;
+
+---
+#  Hoy vimos...
+
+- ☑ [Regresiones básicas](#intro)
+
+- ☑ [Posestimaciones](#post)
+
+- ☑ [Datos panel y IV](#felm)
+   
+  
+---
+# Vamos a R para aplicar los conceptos vistos en clase...
+
+&lt;div align="center"&gt;
+&lt;img src="pics/run_class.gif" height=450&gt;
+&lt;/div&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
