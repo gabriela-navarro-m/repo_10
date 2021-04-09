@@ -22,9 +22,10 @@ covid = mutate(covid , treatment = ifelse(cod_localidad %in% treated,1,0),
 
 # correr regresiones (cuarentena contra no cuarentena)
 cat("casos_08 ~ casos_07 + treated")
-
+ols1=lm(casos_08 ~ casos_07 + treated, data=covid) %>% summary()
 # correr regresion borde 
 cat("casos_08 ~ casos_07 + treated")
-
+ols2=lm(casos_08 ~ casos_07 + treated, data = covid, subset= borde==1) %>% summary
 # revise los objetos de las regresiones
-
+ols1
+ols2
